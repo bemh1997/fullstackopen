@@ -1,9 +1,15 @@
+import PropTypes from 'prop-types';
+
 const Header = (props) => {
   return (
     <>
       <h1>{props.course}</h1>
     </>
   );
+};
+
+Header.propTypes = {
+  course: PropTypes.string.isRequired,
 };
 const Content = (props) => {
   return (
@@ -24,6 +30,15 @@ const Content = (props) => {
   )
 };
 
+Content.propTypes = {
+  part1: PropTypes.string.isRequired,
+  part2: PropTypes.string.isRequired,
+  part3: PropTypes.string.isRequired,
+  exercises1: PropTypes.number.isRequired,
+  exercises2: PropTypes.number.isRequired,
+  exercises3: PropTypes.number.isRequired,
+};
+
 const Part = (props) =>{
   return (
       <>
@@ -32,6 +47,12 @@ const Part = (props) =>{
     )
 }
 
+Part.propTypes = {
+  number: PropTypes.string.isRequired,
+  part: PropTypes.string.isRequired,
+  exercises: PropTypes.number.isRequired,
+};
+
 const Total = (props) => {
   return (
     <>
@@ -39,6 +60,12 @@ const Total = (props) => {
     </>
   )
 };
+Total.propTypes = {
+  exercises1: PropTypes.number.isRequired,
+  exercises2: PropTypes.number.isRequired,
+  exercises3: PropTypes.number.isRequired,
+};
+
 const App = () => {
   const course = {
     name: 'Half Stack application development',
@@ -71,9 +98,7 @@ const App = () => {
       <Total 
         exercises1={course.parts[0].exercises} 
         exercises2={course.parts[1].exercises} 
-        exercises3={course.parts[2
-          
-        ].exercises} />
+        exercises3={course.parts[2].exercises} />
     </>
   )
 };
