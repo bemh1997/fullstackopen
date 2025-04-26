@@ -19,7 +19,7 @@ const App = () => {
   });
 
   // State for the filter
-  const [filterTerm, setFilterTerm] = useState('');
+  const [filterTerm, setFilterTerm] = useState();
 
   // Generic change handler for all fields
   const handleInputChange = (event) => {
