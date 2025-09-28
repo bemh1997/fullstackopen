@@ -8,13 +8,13 @@ const Statistics = ({good, neutral, bad}) => {
   if (all === 0) {
     return (
       <div>
-        No feedback given
+        <p>No feedback given</p>
       </div>
     )
   }
 
   return (
-    <div>
+    <div id="tableStatistic">
       <table>
         <tbody>
           <StatisticLine text="good" value={good} />
@@ -22,7 +22,7 @@ const Statistics = ({good, neutral, bad}) => {
           <StatisticLine text="bad" value={bad} />
           <StatisticLine text="all" value={all} />
           <StatisticLine text="average" value={average} />
-          <StatisticLine text="positive" value={positive} />
+          <StatisticLine text="positive" value={positive + '%'} />
         </tbody>
       </table>
     </div>
@@ -51,20 +51,38 @@ const App = () => {
   const [good, setGood] = useState(0)
   const [neutral, setNeutral] = useState(0)
   const [bad, setBad] = useState(0)
+  const [may, setMay] = useState("May")
+  
+  const arregloDeMays = ["Si es May", "No es May"]
+
+  function handleClick() {
+    const i = may === "Si es May" ? 1 : 0;
+
+    setMay(arregloDeMays[i]);
+  }
 
   return (
-    <div>
+    <>
       <h1>give feedback</h1>
       <Button handleClick={() => setGood(good + 1)} text='good' />
       <Button handleClick={() => setNeutral(neutral + 1)} text='neutral' />
       <Button handleClick={() => setBad(bad + 1)} text='bad' />
+
+      <Button handleClick={handleClick} text='Change' />
+
+      <table>
+        <tbody>
+          <StatisticLine text="Valor de May" value={may} />
+        </tbody>
+      </table>
+      
 
 
       <h1>statistics</h1>
 
       <Statistics good={good} neutral={neutral} bad={bad} />
 
-    </div>
+    </>
   )
 }
 
