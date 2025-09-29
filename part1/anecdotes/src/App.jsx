@@ -46,12 +46,7 @@ const App = () => {
   ]
 
   const [selected, setSelected] = useState(0);
-  const [votes, setVotes] = useState(
-    anecdotes.reduce((obj, _, index) => {
-      obj[index] = 0;
-      return obj;
-    }, {})
-  );
+  const [votes, setVotes] = useState(Array(anecdotes.length).fill(0));
 
   const getRandomAnecdote = () => {
     let random;
@@ -61,22 +56,15 @@ const App = () => {
     return random;
   }
 
-  const handleVote = (selected) => {
-    const newVotes = { ...votes };
+  const handleVote = () => {
+    const newVotes = [...votes];
     newVotes[selected] += 1;
     setVotes(newVotes);
   }
 
   const mostVotes = () => {
-    const voteValues = Object.values(votes);
-    const maxVotes = Math.max(...voteValues); 
-    if (maxVotes === 0) return 0;
-    return voteValues.indexOf(maxVotes); 
+    return votes.indexOf(Math.max(...votes));
   }
-
-  const mostVotedIndex = mostVotes();
-
-  const maxVoteCount = votes[mostVotedIndex];
 
   return (
     <div>
@@ -85,9 +73,9 @@ const App = () => {
         selected={selected}
         votes={votes}  
       />
-      <Button onClick={() => handleVote(selected)} text="vote"/>
+      <Button onClick={handleVote} text="vote"/>
       <Button onClick={() => setSelected(getRandomAnecdote())} text="next anecdote"/> 
-      <MostVoteAnecdote anecdote={anecdotes[mostVotedIndex]} votes={maxVoteCount}/>
+      <MostVoteAnecdote anecdote={anecdotes[mostVotes()]} votes={votes[mostVotes()]}/>
     </div>
   )
 };
