@@ -1,13 +1,8 @@
-const Part = ({ part }) =>{
-
-  // eslint-disable-next-line react/prop-types
-  const { name, exercises } = part;
-  
-  return (
-      <div>
-        <p>{name}, exercises: {exercises}.</p>
-      </div>
-    )
-}
+const Part = ({ part }) => {
+  return(
+  <p>
+    {part.name} {part.exercises}
+  </p>
+);}
 
 export default Part;
