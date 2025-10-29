@@ -1,16 +1,23 @@
-// App.jsx
-import { useState } from 'react'
+import axios from 'axios';
+import { 
+  useState,
+  useEffect
+} from 'react';
 import PersonForm from './components/PersonForm'
 import Persons from './components/Persons';
 import Filter from './components/Filter';
 
 const App = () => {
-  const [persons, setPersons] = useState([
-    { name: 'Arto Hellas', number: '1400123456', id: 1 },
-    { name: 'Ada Lovelace', number: '3944532352', id: 2 },
-    { name: 'Dan Abramov', number: '1243234345', id: 3 },
-    { name: 'Mary Poppendieck', number: '3923642312', id: 4 }
-  ]);
+  const [persons, setPersons] = useState([]);
+
+  useEffect(()=>{
+    console.log('Effect :>> ');
+    axios
+      .get('http://localhost:3001/persons')
+      .then(response =>{
+        setPersons(response.data)
+      })
+  },[])
   
   // Combined state in a single object
   const [formData, setFormData] = useState({
