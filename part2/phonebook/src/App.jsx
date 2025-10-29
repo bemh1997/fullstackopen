@@ -66,11 +66,16 @@ const App = () => {
       return;
     }
     
-    if (persons.some(person => person.name === formData.name)) {
+    if (persons.some(person => person.name.toLowerCase() === formData.name.toLowerCase())) {
       alert(`${formData.name} is already in the phonebook`);
       return;
     }
     
+    if (persons.some(person => person.number === formData.number)) {
+      alert(`The number ${formData.number} is already assigned to another contact.`);
+      return;
+    }
+
     const personObject = {
       name: formData.name,
       number: formData.number,
