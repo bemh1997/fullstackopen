@@ -1,37 +1,90 @@
-import axios from 'axios';
-import { 
+import {
   useState,
   useEffect
 } from 'react';
 import PersonForm from './components/PersonForm'
 import Persons from './components/Persons';
 import Filter from './components/Filter';
+import phoneService from './services/persons'
 
 const App = () => {
   const [persons, setPersons] = useState([]);
-
-  useEffect(()=>{
-    console.log('Effect :>> ');
-    axios
-      .get('http://localhost:3001/persons')
-      .then(response =>{
-        setPersons(response.data)
-      })
-  },[])
-  
-  // Combined state in a single object
-  const [formData, setFormData] = useState({
+  const [filterTerm, setFilterTerm] = useState('');
+	const [formData, setFormData] = useState({
     name: '',
     number: ''
   });
 
-  // State for the filter
-  const [filterTerm, setFilterTerm] = useState('');
+  useEffect(()=>{
+    phoneService.getAll().then((initialPhones)=> setPersons(initialPhones))
+  },[])
+
+	const addPerson = (event) => {
+    event.preventDefault();
+
+    // Validations
+    if (formData.name === '') {
+      alert('Please enter a name');
+      return;
+    }
+
+    if (formData.name.length < 3) {
+      alert('Name must be at least 3 characters long');
+      return;
+    }
+
+    if (formData.number.length !== 10) {
+      alert('Phone number must be exactly 10 digits');
+      return;
+    }
+
+		const existingPerson = persons.find(p => p.name.toLowerCase() === formData.name.toLowerCase());
+
+    if (existingPerson) {
+      const confirmUpdate = window.confirm(
+        `${existingPerson.name} is already added to phonebook, replace the old number with a new one?`
+      );
+
+      if (confirmUpdate) {
+        const personToUpdate = { ...existingPerson, number: formData.number };
+
+        phoneService
+          .update(existingPerson.id, personToUpdate) 
+          .then(returnedPerson => {
+            setPersons(persons.map(p => p.id !== existingPerson.id ? p : returnedPerson));
+            setFormData({ name: '', number: '' });
+          })
+          .catch(error => {
+            alert(`Information of ${existingPerson.name} has already been removed from server`);
+            setPersons(persons.filter(n => n.id !== existingPerson.id));
+          });
+      }
+      return; 
+    }
+
+    if (persons.some(person => person.number === formData.number)) {
+      alert(`The number ${formData.number} is already assigned to another contact.`);
+      return;
+    }
+
+    const personObject = {
+      name: formData.name,
+      number: formData.number,
+    };
+
+		phoneService.create(personObject).then(returnedPhone=>{
+			setPersons(persons.concat(returnedPhone));
+			setFormData({
+				name: '',
+				number: ''
+    	});
+		});
+  };
 
   // Generic change handler for all fields
   const handleInputChange = (event) => {
     const { name, value } = event.target;
-    
+
     // If it's the number field, validate digits only
     if (name === 'number' && value !== '') {
       const numericValue = value.replace(/\D/g, '');
@@ -50,59 +103,30 @@ const App = () => {
   }
 
   // Handler for filter input
-  const handleFilterChange = (event) => { 
+  const handleFilterChange = (event) => {
     setFilterTerm(event.target.value)
   }
 
-  const addPerson = (event) => {
-    event.preventDefault();
-    
-    // Validations
-    if (formData.name === '') {
-      alert('Please enter a name');
-      return;
+	const handleDelete = (id) =>{
+		const person = persons.find(n => n.id === id)
+		if (window.confirm(`Delete ${person.name}?`)) {
+			phoneService
+			.deletePhone(id)
+			.then(() => {
+				setPersons(persons.filter(n => n.id !== id));
+			})
+			.catch((error) => {
+				alert(`Information of ${person.name} has already been removed from server`);
+				setPersons(persons.filter(n => n.id !== id));
+			});
     }
-    
-    if (formData.name.length < 3) {
-      alert('Name must be at least 3 characters long');
-      return;
-    }
-    
-    if (formData.number.length !== 10) {
-      alert('Phone number must be exactly 10 digits');
-      return;
-    }
-    
-    if (persons.some(person => person.name.toLowerCase() === formData.name.toLowerCase())) {
-      alert(`${formData.name} is already in the phonebook`);
-      return;
-    }
-    
-    if (persons.some(person => person.number === formData.number)) {
-      alert(`The number ${formData.number} is already assigned to another contact.`);
-      return;
-    }
-
-    const personObject = {
-      name: formData.name,
-      number: formData.number,
-      id: persons.length + 1
-    };
-    
-    setPersons(persons.concat(personObject));
-    
-    // Clear the form
-    setFormData({
-      name: '',
-      number: ''
-    });
-  };
+	}
 
   // Filter persons based on filter term
   const filteredPersons = persons.filter(person => {
     const termLower = filterTerm.toLowerCase();
     return (
-      person.name.toLowerCase().includes(termLower) || 
+      person.name.toLowerCase().includes(termLower) ||
       person.number.includes(filterTerm)
     );
   });
@@ -123,12 +147,15 @@ const App = () => {
     <div>
       <h2>Phonebook</h2>
       <Filter {...filterProps}/>
-      
+
       <h3>Add a new</h3>
       <PersonForm {...formProps} />
-      
+
       <h3>Numbers</h3>
-      <Persons persons={filteredPersons} />
+      <Persons 
+				persons = {filteredPersons}
+				handleDelete={handleDelete}
+			/>
     </div>
   );
 };
