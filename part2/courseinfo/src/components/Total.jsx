@@ -7,5 +7,4 @@ const Total = ({ parts }) => {
   )
 };
 
-
 export default Total;

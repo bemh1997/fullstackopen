@@ -1,30 +1,128 @@
-// App.jsx
-import { useState } from 'react'
+import {
+  useState,
+  useEffect
+} from 'react';
+import Filter from './components/Filter';
+import Notification from './components/Notification';
 import PersonForm from './components/PersonForm'
 import Persons from './components/Persons';
-import Filter from './components/Filter';
+import phoneService from './services/persons'
 
 const App = () => {
-  const [persons, setPersons] = useState([
-    { name: 'Arto Hellas', number: '1400123456', id: 1 },
-    { name: 'Ada Lovelace', number: '3944532352', id: 2 },
-    { name: 'Dan Abramov', number: '1243234345', id: 3 },
-    { name: 'Mary Poppendieck', number: '3923642312', id: 4 }
-  ]);
-  
-  // Combined state in a single object
-  const [formData, setFormData] = useState({
+  const [persons, setPersons] = useState([]);
+  const [filterTerm, setFilterTerm] = useState('');
+	const [formData, setFormData] = useState({
     name: '',
     number: ''
   });
+	const [notification, setNotification] = useState(null);
+	const [isError, setIsError] = useState(false);
 
-  // State for the filter
-  const [filterTerm, setFilterTerm] = useState('');
+  useEffect(()=>{
+    phoneService.getAll().then((initialPhones)=> setPersons(initialPhones))
+  },[])
+
+	const addPerson = (event) => {
+    event.preventDefault();
+
+    // Validations
+    if (formData.name === '') {
+      setNotification('Please enter a name');
+			setIsError(true);
+			setTimeout(() => {
+				setNotification(null);
+				setIsError(false);
+			}, 5000);
+      return;
+    }
+
+    if (formData.name.length < 3) {
+      setNotification('Name must be at least 3 characters long');
+			setIsError(true);
+			setTimeout(() => {
+				setNotification(null);
+				setIsError(false);
+			}, 5000);
+      return;
+    }
+
+    if (formData.number.length !== 10) {
+      setNotification('Phone number must be exactly 10 digits');
+			setIsError(true);
+			setTimeout(() => {
+				setNotification(null);
+				setIsError(false);
+			}, 5000);
+      return;
+    }
+
+		const existingPerson = persons.find(p => p.name.toLowerCase() === formData.name.toLowerCase());
+
+    if (existingPerson) {
+      const confirmUpdate = window.confirm(
+        `${existingPerson.name} is already added to phonebook, replace the old number with a new one?`
+      );
+
+      if (confirmUpdate) {
+        const personToUpdate = { ...existingPerson, number: formData.number };
+
+        phoneService
+          .update(existingPerson.id, personToUpdate) 
+          .then(returnedPerson => {
+            setPersons(persons.map(p => p.id !== existingPerson.id ? p : returnedPerson));
+						setNotification(existingPerson.name + " has been updated");
+						setIsError(false);
+						setTimeout(() => {
+							setNotification(null)
+						}, 5000);
+            setFormData({ name: '', number: '' });
+          })
+          .catch(error => {
+						setNotification(`Information of ${existingPerson.name} has already been removed from server`);
+						setIsError(true);
+						setTimeout(() => {
+							setNotification(null);
+							setIsError(false);
+						}, 5000);
+						setPersons(persons.filter(n => n.id !== existingPerson.id));
+          });
+      }
+      return; 
+    }
+
+    if (persons.some(person => person.number === formData.number)) {
+      setNotification(`The number ${formData.number} is already assigned to another contact.`);
+			setIsError(true);
+			setTimeout(() => {
+				setNotification(null);
+				setIsError(false);
+			}, 5000);
+      return;
+    }
+
+    const personObject = {
+      name: formData.name,
+      number: formData.number,
+    };
+
+		phoneService.create(personObject).then(returnedPhone=>{
+			setPersons(persons.concat(returnedPhone));
+			setNotification(`Added ${personObject.name}`);
+			setTimeout(() => {
+				setNotification(null);
+				setIsError(false);
+			}, 5000);
+			setFormData({
+				name: '',
+				number: ''
+    	});
+		});
+  };
 
   // Generic change handler for all fields
   const handleInputChange = (event) => {
     const { name, value } = event.target;
-    
+
     // If it's the number field, validate digits only
     if (name === 'number' && value !== '') {
       const numericValue = value.replace(/\D/g, '');
@@ -43,54 +141,35 @@ const App = () => {
   }
 
   // Handler for filter input
-  const handleFilterChange = (event) => { 
+  const handleFilterChange = (event) => {
     setFilterTerm(event.target.value)
   }
 
-  const addPerson = (event) => {
-    event.preventDefault();
-    
-    // Validations
-    if (formData.name === '') {
-      alert('Please enter a name');
-      return;
+	const handleDelete = (id) =>{
+		const person = persons.find(n => n.id === id)
+		if (window.confirm(`Delete ${person.name}?`)) {
+			phoneService
+			.deletePhone(id)
+			.then(() => {
+				setPersons(persons.filter(n => n.id !== id));
+			})
+			.catch((error) => {
+				setNotification(`Information of ${person.name} has already been removed from server`);
+				setIsError(true);
+				setTimeout(() => {
+					setNotification(null);
+					setIsError(false);
+				}, 5000);
+				setPersons(persons.filter(n => n.id !== id));
+			});
     }
-    
-    if (formData.name.length < 3) {
-      alert('Name must be at least 3 characters long');
-      return;
-    }
-    
-    if (formData.number.length !== 10) {
-      alert('Phone number must be exactly 10 digits');
-      return;
-    }
-    
-    if (persons.some(person => person.name === formData.name)) {
-      alert(`${formData.name} is already in the phonebook`);
-      return;
-    }
-    
-    const personObject = {
-      name: formData.name,
-      number: formData.number,
-      id: persons.length + 1
-    };
-    
-    setPersons(persons.concat(personObject));
-    
-    // Clear the form
-    setFormData({
-      name: '',
-      number: ''
-    });
-  };
+	}
 
   // Filter persons based on filter term
   const filteredPersons = persons.filter(person => {
     const termLower = filterTerm.toLowerCase();
     return (
-      person.name.toLowerCase().includes(termLower) || 
+      person.name.toLowerCase().includes(termLower) ||
       person.number.includes(filterTerm)
     );
   });
@@ -110,13 +189,17 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+			<Notification message={notification} status={isError}/>
       <Filter {...filterProps}/>
-      
+
       <h3>Add a new</h3>
       <PersonForm {...formProps} />
-      
+
       <h3>Numbers</h3>
-      <Persons persons={filteredPersons} />
+      <Persons 
+				persons = {filteredPersons}
+				handleDelete={handleDelete}
+			/>
     </div>
   );
 };

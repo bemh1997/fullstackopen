@@ -1,12 +1,1 @@
-const Header = (props) => {
-  // eslint-disable-next-line react/prop-types
-  const { course } = props;
-
-  return (
-    <>
-      <h2>{course}</h2>
-    </>
-  );
-};
-
-export default Header;
+export const Header = ({ course }) => <h1>{ course }</h1>;
