@@ -1,4 +1,4 @@
-const Persons = ({ persons, handleUpdate, handleDelete }) => {
+const Persons = ({ persons, handleDelete }) => {
   
   return (
     <>

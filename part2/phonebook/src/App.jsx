@@ -2,9 +2,10 @@ import {
   useState,
   useEffect
 } from 'react';
+import Filter from './components/Filter';
+import Notification from './components/Notification';
 import PersonForm from './components/PersonForm'
 import Persons from './components/Persons';
-import Filter from './components/Filter';
 import phoneService from './services/persons'
 
 const App = () => {
@@ -14,6 +15,8 @@ const App = () => {
     name: '',
     number: ''
   });
+	const [notification, setNotification] = useState(null);
+	const [isError, setIsError] = useState(false);
 
   useEffect(()=>{
     phoneService.getAll().then((initialPhones)=> setPersons(initialPhones))
@@ -24,17 +27,32 @@ const App = () => {
 
     // Validations
     if (formData.name === '') {
-      alert('Please enter a name');
+      setNotification('Please enter a name');
+			setIsError(true);
+			setTimeout(() => {
+				setNotification(null);
+				setIsError(false);
+			}, 5000);
       return;
     }
 
     if (formData.name.length < 3) {
-      alert('Name must be at least 3 characters long');
+      setNotification('Name must be at least 3 characters long');
+			setIsError(true);
+			setTimeout(() => {
+				setNotification(null);
+				setIsError(false);
+			}, 5000);
       return;
     }
 
     if (formData.number.length !== 10) {
-      alert('Phone number must be exactly 10 digits');
+      setNotification('Phone number must be exactly 10 digits');
+			setIsError(true);
+			setTimeout(() => {
+				setNotification(null);
+				setIsError(false);
+			}, 5000);
       return;
     }
 
@@ -52,18 +70,33 @@ const App = () => {
           .update(existingPerson.id, personToUpdate) 
           .then(returnedPerson => {
             setPersons(persons.map(p => p.id !== existingPerson.id ? p : returnedPerson));
+						setNotification(existingPerson.name + " has been updated");
+						setIsError(false);
+						setTimeout(() => {
+							setNotification(null)
+						}, 5000);
             setFormData({ name: '', number: '' });
           })
           .catch(error => {
-            alert(`Information of ${existingPerson.name} has already been removed from server`);
-            setPersons(persons.filter(n => n.id !== existingPerson.id));
+						setNotification(`Information of ${existingPerson.name} has already been removed from server`);
+						setIsError(true);
+						setTimeout(() => {
+							setNotification(null);
+							setIsError(false);
+						}, 5000);
+						setPersons(persons.filter(n => n.id !== existingPerson.id));
           });
       }
       return; 
     }
 
     if (persons.some(person => person.number === formData.number)) {
-      alert(`The number ${formData.number} is already assigned to another contact.`);
+      setNotification(`The number ${formData.number} is already assigned to another contact.`);
+			setIsError(true);
+			setTimeout(() => {
+				setNotification(null);
+				setIsError(false);
+			}, 5000);
       return;
     }
 
@@ -74,6 +107,11 @@ const App = () => {
 
 		phoneService.create(personObject).then(returnedPhone=>{
 			setPersons(persons.concat(returnedPhone));
+			setNotification(`Added ${personObject.name}`);
+			setTimeout(() => {
+				setNotification(null);
+				setIsError(false);
+			}, 5000);
 			setFormData({
 				name: '',
 				number: ''
@@ -116,7 +154,12 @@ const App = () => {
 				setPersons(persons.filter(n => n.id !== id));
 			})
 			.catch((error) => {
-				alert(`Information of ${person.name} has already been removed from server`);
+				setNotification(`Information of ${person.name} has already been removed from server`);
+				setIsError(true);
+				setTimeout(() => {
+					setNotification(null);
+					setIsError(false);
+				}, 5000);
 				setPersons(persons.filter(n => n.id !== id));
 			});
     }
@@ -146,6 +189,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+			<Notification message={notification} status={isError}/>
       <Filter {...filterProps}/>
 
       <h3>Add a new</h3>

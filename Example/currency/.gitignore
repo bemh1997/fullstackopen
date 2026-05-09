@@ -7,17 +7,12 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Directorios de dependencias y builds
 node_modules
-.pnpm-store
 dist
 dist-ssr
-
-# Archivos de caché y de bloqueo de dependencias
-pnpm-lock.yaml
 *.local
 
-# Archivos de IDE y sistema
+# Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -27,4 +22,3 @@ pnpm-lock.yaml
 *.njsproj
 *.sln
 *.sw?
-seguimiento.md
